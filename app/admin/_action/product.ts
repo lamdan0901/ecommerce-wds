@@ -6,7 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 // Cuz 'File' can only used in client side, not server side, so we use z.any() instead of z.instanceOf(File)
-const fileSchema = z.any();
+const fileSchema = z.custom<File>();
 const imageSchema = fileSchema.refine(
   (file: File) => file.size === 0 || file.type.startsWith("image/") // if file size = 0, it's not an image, otherwise, check if it's an image or not
 );
