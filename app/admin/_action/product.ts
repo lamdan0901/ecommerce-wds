@@ -2,11 +2,11 @@
 
 import db from "@/db";
 import { mkdir, writeFile } from "fs";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
-// Cuz 'File' can only used in client side, not server side, so we use z.any() instead of z.instanceOf(File)
-const fileSchema = z.custom<File>((v) => v instanceof File);
+// Cuz 'File' can only used in client side, not server side, so we use z.custom<File>() instead of z.instanceOf(File)
+const fileSchema = z.custom<File>();
 const imageSchema = fileSchema.refine(
   (file: File) => file.size === 0 || file.type.startsWith("image/") // if file size = 0, it's not an image, otherwise, check if it's an image or not
 );
@@ -68,4 +68,21 @@ export async function addProduct(_prevState: unknown, formData: FormData) {
   // ! file name is not in utf-8
 
   redirect("/admin/products");
+}
+
+export async function toggleProductAvailability(
+  id: string,
+  isAvailableForPurchase: boolean
+) {
+  await db?.product.update({
+    where: { id },
+    data: { isAvailableForPurchase },
+  });
+}
+
+export async function deleteProduct(id: string) {
+  const prod = await db?.product.delete({
+    where: { id },
+  });
+  if (!prod) return notFound();
 }

@@ -1,16 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Label } from "../../../../components/ui/label";
-import { Input } from "../../../../components/ui/input";
-import { formatCurrency } from "../../../../lib/formatters";
-import { Button } from "../../../../components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { formatCurrency } from "@/lib/formatters";
+import { Button } from "@/components/ui/button";
 import { addProduct } from "../../_action/product";
 import { useFormState, useFormStatus } from "react-dom";
 
 function ProductForm() {
   const [error, action] = useFormState(addProduct, {});
-  const { pending } = useFormStatus();
   const [priceInCents, setPriceInCents] = useState(0);
 
   return (
@@ -66,10 +65,17 @@ function ProductForm() {
         />
         {error.image && <p className="text-destructive">{error.image}</p>}
       </div>
-      <Button disabled={pending} type="submit">
-        Submit{pending ? "..." : ""}
-      </Button>
+      <SubmitButton />
     </form>
+  );
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button disabled={pending} type="submit">
+      Submit{pending ? "ting..." : ""}
+    </Button>
   );
 }
 
