@@ -2,6 +2,7 @@
 
 import db from "@/db";
 import { mkdir, writeFile } from "fs";
+import { unlink } from "fs/promises";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -17,6 +18,11 @@ const addSchema = z.object({
   description: z.string().min(1),
   file: fileSchema.refine((file: File) => file.size > 0, "Required"),
   image: imageSchema.refine((file: File) => file.size > 0, "Required"),
+});
+
+const editSchema = addSchema.extend({
+  file: fileSchema.optional(),
+  image: imageSchema.optional(),
 });
 
 export async function addProduct(_prevState: unknown, formData: FormData) {
@@ -70,6 +76,70 @@ export async function addProduct(_prevState: unknown, formData: FormData) {
   redirect("/admin/products");
 }
 
+export async function updateProduct(
+  id: string,
+  _prevState: unknown,
+  formData: FormData
+) {
+  const product = await db?.product.findFirst({
+    where: { id },
+  });
+  if (!product) return notFound();
+
+  const res = editSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!res.success) {
+    return res.error.formErrors.fieldErrors;
+  }
+
+  const prod = res.data;
+
+  let filePath = product.filePath;
+  if (prod.file && prod.file.size > 0) {
+    await unlink(filePath);
+    filePath = `products/${crypto.randomUUID()}-${prod.file.name}`;
+    await writeFile(
+      filePath,
+      Buffer.from(await prod.file.arrayBuffer()),
+      (err) => {
+        if (err) throw err;
+        console.log("The file has been saved!");
+      }
+    );
+  }
+
+  let imagePath = product.imagePath;
+  if (prod.image && prod.image.size > 0) {
+    await unlink(`public${imagePath}`);
+    imagePath = `/products/${crypto.randomUUID()}-${prod.image.name}`;
+    await writeFile(
+      `public${imagePath}`,
+      Buffer.from(await prod.image.arrayBuffer()),
+      (err) => {
+        if (err) throw err;
+        console.log("The image has been saved!");
+      }
+    );
+  }
+
+  await db?.product
+    .update({
+      where: { id },
+      data: {
+        name: prod.name,
+        description: prod.description,
+        priceInCents: prod.priceInCents,
+        filePath,
+        imagePath,
+      },
+    })
+    .catch((err) => {
+      console.log(err);
+      throw err;
+    });
+
+  redirect("/admin/products");
+}
+
 export async function toggleProductAvailability(
   id: string,
   isAvailableForPurchase: boolean
@@ -85,4 +155,7 @@ export async function deleteProduct(id: string) {
     where: { id },
   });
   if (!prod) return notFound();
+
+  unlink(prod.imagePath);
+  unlink(`public/${prod.filePath}`);
 }

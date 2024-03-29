@@ -87,7 +87,7 @@ async function ProductsTable() {
               ) : (
                 <>
                   <span className="sr-only">Not Available</span>
-                  <XCircle />
+                  <XCircle className="stroke-destructive" />
                 </>
               )}
             </TableCell>
@@ -100,7 +100,7 @@ async function ProductsTable() {
                   <MoreVertical /> <span className="sr-only">Actions</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <a
                       download={true}
                       href={`/admin/products/${prod.id}/download`}
@@ -108,7 +108,7 @@ async function ProductsTable() {
                       Download
                     </a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem asChild>
                     <Link href={`/admin/products/${prod.id}/edit`}>Edit</Link>
                   </DropdownMenuItem>
                   <ActiveToggleDropdownItem

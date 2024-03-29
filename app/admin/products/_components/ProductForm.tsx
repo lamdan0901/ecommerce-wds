@@ -5,18 +5,30 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
-import { addProduct } from "../../_action/product";
+import { addProduct, updateProduct } from "../../_action/product";
 import { useFormState, useFormStatus } from "react-dom";
+import { Product } from "@prisma/client";
+import Image from "next/image";
 
-function ProductForm() {
-  const [error, action] = useFormState(addProduct, {});
-  const [priceInCents, setPriceInCents] = useState(0);
+function ProductForm({ product }: { product?: Product | null }) {
+  const [error, action] = useFormState(
+    product ? updateProduct.bind(null, product.id) : addProduct,
+    {}
+  );
+  const [priceInCents, setPriceInCents] = useState(product?.priceInCents || 0);
 
   return (
     <form action={action} className="space-y-8">
       <div className="space-y-2">
         <Label htmlFor="name">Name</Label>
-        <Input id="name" name="name" type="text" placeholder="Name" required />
+        <Input
+          id="name"
+          name="name"
+          type="text"
+          defaultValue={product?.name}
+          placeholder="Name"
+          required
+        />
         {error.name && <p className="text-destructive">{error.name}</p>}
       </div>
       <div className="space-y-2">
@@ -43,6 +55,7 @@ function ProductForm() {
           name="description"
           type="text"
           placeholder="Description"
+          defaultValue={product?.description}
           required
         />
         {error.description && (
@@ -51,7 +64,16 @@ function ProductForm() {
       </div>
       <div className="space-y-2">
         <Label htmlFor="file">File</Label>
-        <Input id="file" name="file" type="file" placeholder="File" required />
+        <Input
+          id="file"
+          name="file"
+          type="file"
+          placeholder="File"
+          required={!product}
+        />
+        {!!product && (
+          <p className="text-muted-foreground">{product.filePath}</p>
+        )}
         {error.file && <p className="text-destructive">{error.file}</p>}
       </div>
       <div className="space-y-2">
@@ -61,8 +83,16 @@ function ProductForm() {
           name="image"
           type="file"
           placeholder="Image"
-          required
+          required={!product}
         />
+        {!!product && (
+          <Image
+            width={200}
+            height={200}
+            alt="preview product"
+            src={product.imagePath}
+          ></Image>
+        )}
         {error.image && <p className="text-destructive">{error.image}</p>}
       </div>
       <SubmitButton />
