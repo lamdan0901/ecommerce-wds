@@ -3,6 +3,7 @@
 import db from "@/db";
 import { mkdir, writeFile } from "fs";
 import { unlink } from "fs/promises";
+import { revalidatePath } from "next/cache";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -73,6 +74,8 @@ export async function addProduct(_prevState: unknown, formData: FormData) {
 
   // ! file name is not in utf-8
 
+  revalidatePath("/");
+  revalidatePath("/products");
   redirect("/admin/products");
 }
 
@@ -137,6 +140,8 @@ export async function updateProduct(
       throw err;
     });
 
+  revalidatePath("/");
+  revalidatePath("/products");
   redirect("/admin/products");
 }
 
@@ -148,6 +153,9 @@ export async function toggleProductAvailability(
     where: { id },
     data: { isAvailableForPurchase },
   });
+
+  revalidatePath("/");
+  revalidatePath("/products");
 }
 
 export async function deleteProduct(id: string) {
@@ -155,6 +163,9 @@ export async function deleteProduct(id: string) {
     where: { id },
   });
   if (!prod) return notFound();
+
+  revalidatePath("/");
+  revalidatePath("/products");
 
   unlink(prod.imagePath);
   unlink(`public/${prod.filePath}`);
